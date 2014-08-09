@@ -19,23 +19,42 @@ eff = eff / 100.0
 
 D = 1 - ( ( vin_min * eff ) / vout )
 
-# TODO: Change this number later!
-dI_l_est = 0.2 * iout * ( vout / vin_min )
+print "Your total duty cycle will be: %.2f" % D
 
-# TODO: Change this to use the nominal input voltage later!!!!
-L = ( vin_min * ( vout - vin_min ) ) / ( dI_l_est * fsw * vout )
+def run_calcs(Nph):
+    print "For %d phases..." % Nph
+    
+    # Duty Cycle for each phase
+    Dph = D / Nph
+    
+    # Average current needed from each phase
+    I_l_ph = iout / (Nph * (1 - Dph))
+    
+    # TODO: Change this number later!
+    dI_l_est = 0.2 * iout * ( vout / vin_min )
 
-dI_l = (vin_min * D) / (fsw * L)
+    # TODO: Change this to use the nominal input voltage later!!!!
+    L = ( vin_min * ( vout - vin_min ) ) / ( dI_l_est * fsw * vout )
 
-# Peak Inductor Current (http://www.ti.com/lit/ds/symlink/tps630251.pdf)
-IL_peak = (iout / (eff * (1 - D))) + ((vin_max * D) / (2 * fsw * L))
+    dI_l = (vin_min * Dph) / (fsw * L)
 
-i_sw_max = (dI_l / 2) + (iout / (1 - D))
+    # Peak Inductor Current (http://www.ti.com/lit/ds/symlink/tps630251.pdf)
+    #IL_peak = (iout / (eff * (1 - Dph))) + ((vin_max * Dph) / (2 * fsw * L))
+    IL_peak = (I_l_ph / eff) + ((vin_max * Dph) / (2 * fsw * L))
 
-print "Your duty cycle will be: %.2f" % D
-print "Your estimated ripple current will be: %.2f" % dI_l_est
-print "Your inductor needs to be at least: %.2f uH" % (L * 1e6)
-print "Your (real) ripple current will be: %.2f" % dI_l
-print "Your inductor needs to have a saturation current higher than: %.2f" % IL_peak
-print "Your max switch current is going to be: %.2f" % i_sw_max
+    #i_sw_max = (dI_l / 2) + (iout / (1 - Dph))
+    i_sw_max = (dI_l / 2) + I_l_ph
 
+    print "Your estimated ripple current will be: %.2f" % dI_l_est
+    print "Your inductor needs to be at least: %.2f uH" % (L * 1e6)
+    print "Your (real) ripple current will be: %.2f" % dI_l
+    print "Each inductor needs to have a saturation current higher than: %.2f" % IL_peak
+    print "Each inductor needs to handle an average current of %.2f" % I_l_ph
+    print "Each switch will need to handle: %.2f A peak." % i_sw_max
+
+for N_ph in [1, 2, 3, 4, 6, 12]:
+    run_calcs(N_ph)
+    
+    
+    
+    
